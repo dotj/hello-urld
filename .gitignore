@@ -1,4 +1,6 @@
 *.class
 .idea
+.bsp
 target/
 project/
+!project/assembly.sbt
