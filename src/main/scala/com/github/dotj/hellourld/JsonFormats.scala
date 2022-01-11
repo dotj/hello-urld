@@ -1,12 +1,14 @@
 package com.github.dotj.hellourld
 
-import UserRegistry.ActionPerformed
+import ShortLinkRegistry.ActionPerformed
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 object JsonFormats {
   import DefaultJsonProtocol._
 
-  implicit val userJsonFormat: RootJsonFormat[User] = jsonFormat3(User)
-  implicit val usersJsonFormat: RootJsonFormat[Users] = jsonFormat1(Users)
+  implicit val shortLinkJsonFormat: RootJsonFormat[ShortLink] = jsonFormat2(ShortLink)
+  implicit val shortLinksJsonFormat: RootJsonFormat[ShortLinks] = jsonFormat1(ShortLinks)
   implicit val actionPerformedJsonFormat: RootJsonFormat[ActionPerformed] = jsonFormat1(ActionPerformed)
+  implicit val updateRequestFormat: RootJsonFormat[UpdateShortLinkRequest] = jsonFormat1(UpdateShortLinkRequest)
+
 }

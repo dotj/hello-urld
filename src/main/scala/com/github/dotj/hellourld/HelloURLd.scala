@@ -31,11 +31,11 @@ object HelloURLd {
   def main(args: Array[String]): Unit = {
 
     val rootBehavior = Behaviors.setup[Nothing] { context =>
-      val userRegistryActor = context.spawn(UserRegistry(), "UserRegistryActor")
-      context.watch(userRegistryActor)
+      val shortLinkRegistryActor = context.spawn(ShortLinkRegistry(), "ShortLinkRegistryActor")
+      context.watch(shortLinkRegistryActor)
 
-      val routes = new UserRoutes(userRegistryActor)(context.system)
-      startHttpServer(routes.userRoutes)(context.system)
+      val routes = new ShortLinkRoutes(shortLinkRegistryActor)(context.system)
+      startHttpServer(routes.shortLinkRoutes)(context.system)
 
       Behaviors.empty
     }
