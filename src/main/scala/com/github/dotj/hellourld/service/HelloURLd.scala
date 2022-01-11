@@ -1,12 +1,13 @@
-package com.github.dotj.hellourld
+package com.github.dotj.hellourld.service
 
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
+import com.github.dotj.hellourld.registry.ShortLinkRegistry
+import com.github.dotj.hellourld.routes.Routes
 
-import scala.util.Failure
-import scala.util.Success
+import scala.util.{Failure, Success}
 
 object HelloURLd {
 
@@ -17,11 +18,7 @@ object HelloURLd {
     futureBinding.onComplete {
       case Success(binding) =>
         val address = binding.localAddress
-        system.log.info(
-          "Server online at http://{}:{}/",
-          address.getHostString,
-          address.getPort
-        )
+        system.log.info(s"Server online at http://${address.getHostString}:${address.getPort}/")
       case Failure(ex) =>
         system.log.error("Failed to bind HTTP endpoint, terminating system", ex)
         system.terminate()
@@ -34,8 +31,8 @@ object HelloURLd {
       val shortLinkRegistryActor = context.spawn(ShortLinkRegistry(), "ShortLinkRegistryActor")
       context.watch(shortLinkRegistryActor)
 
-      val routes = new ShortLinkRoutes(shortLinkRegistryActor)(context.system)
-      startHttpServer(routes.shortLinkRoutes)(context.system)
+      val routes = new Routes(shortLinkRegistryActor)(context.system)
+      startHttpServer(routes.allRoutes)(context.system)
 
       Behaviors.empty
     }
