@@ -1,21 +1,19 @@
-package com.github.dotj.hellourld.routes
+package com.github.dotj.hellourld
 
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.{ActorRef, ActorSystem}
-import akka.http.scaladsl.model.{StatusCodes, Uri}
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import com.github.dotj.hellourld.registry.{ShortLinkRegistry}
-import com.github.dotj.hellourld.registry.ShortLinkRegistry._
-import com.github.dotj.hellourld.routes
+import com.github.dotj.hellourld.ShortLinkRegistry._
 
 import scala.concurrent.Future
 
 class Routes(registry: ActorRef[ShortLinkRegistry.Command])(implicit val system: ActorSystem[_]) {
 
-  import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
   import JsonFormats._
+  import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 
   // If ask takes more time than this to complete the request is failed
   private implicit val timeout: Timeout =
@@ -35,7 +33,10 @@ class Routes(registry: ActorRef[ShortLinkRegistry.Command])(implicit val system:
     (get & path(shortcutBase / Segment)) { pathId =>
       rejectEmptyResponse {
         onSuccess(findShortLink(pathId)) { response =>
-          redirect(response.shortLink.get.redirectToUrl, StatusCodes.TemporaryRedirect)
+          response.shortLink match {
+            case Some(link) => redirect(link.redirectToUrl, StatusCodes.TemporaryRedirect)
+            case _          => complete(StatusCodes.NotFound)
+          }
         }
       }
     }

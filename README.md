@@ -30,28 +30,28 @@ curl -X POST \
   'http:/localhost:9999/shortlink' \
   -H 'Content-Type:application/json' \
   -d '{
-    "alias": "ggg",
-    "fullUrl": "google.com"
+    "token": "ggg",
+    "redirectToUrl": "https://google.com"
   }'
-
 
 curl -X POST \
   'http:/localhost:9999/shortlink' \
   -H 'Content-Type:application/json' \
   -d '{
-    "alias": "aaa",
-    "fullUrl": "amazon.com"
+    "token": "wiki",
+    "redirectToUrl": "https://www.wikipedia.org/"
   }'
 
 # Delete a shortlink
 curl -X DELETE 'http:/localhost:9999/shortlink/ggg'
-
 
 # Edit a shortlink
 curl -X PUT \
   'http:/localhost:9999/shortlink/ggg' \
   -H 'Content-Type:application/json' \
   -d '{
-    "updatedUrl": "https://lmgtfy.app/"
+    "newUrl": "https://lmgtfy.app/"
   }'
+
+# Redirected shortlink at: http://localhost:9999/s/wiki
 ```

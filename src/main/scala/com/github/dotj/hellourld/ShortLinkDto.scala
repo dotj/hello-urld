@@ -1,4 +1,4 @@
-package com.github.dotj.hellourld.routes
+package com.github.dotj.hellourld
 
 import scala.collection.immutable
 

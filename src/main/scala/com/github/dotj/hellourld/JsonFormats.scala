@@ -1,6 +1,6 @@
-package com.github.dotj.hellourld.routes
+package com.github.dotj.hellourld
 
-import com.github.dotj.hellourld.registry.ShortLinkRegistry.ActionPerformed
+import ShortLinkRegistry.ActionPerformed
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 object JsonFormats {

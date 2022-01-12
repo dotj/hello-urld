@@ -1,8 +1,7 @@
-package com.github.dotj.hellourld.registry
+package com.github.dotj.hellourld
 
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior}
-import com.github.dotj.hellourld.routes.{ShortLinkDto, ShortLinksDto, UpdateShortLinkRequest}
 
 object ShortLinkRegistry {
 
@@ -24,17 +23,17 @@ object ShortLinkRegistry {
       case FindAll(replyTo) =>
         replyTo ! ShortLinksDto(shortLinks.toSeq)
         Behaviors.same
-      case Create(token, replyTo) =>
-        replyTo ! ActionPerformed(s"Shortlink $token created.")
-        registry(shortLinks + token)
+      case Create(shortLink, replyTo) =>
+        replyTo ! ActionPerformed(s"ShortLink ${shortLink.token} created.")
+        registry(shortLinks + shortLink)
       case Find(token, replyTo) =>
         replyTo ! ShortLinkFoundResponse(shortLinks.find(_.token == token))
         Behaviors.same
       case Delete(token, replyTo) =>
-        replyTo ! ActionPerformed(s"Shortlink $token deleted.")
+        replyTo ! ActionPerformed(s"ShortLink $token deleted.")
         registry(shortLinks.filterNot(_.token == token))
       case Update(token, updateShortLink, replyTo) =>
-        replyTo ! ActionPerformed(s"Shortlink $token updated.")
+        replyTo ! ActionPerformed(s"ShortLink $token updated.")
         registry(
           shortLinks.filterNot(_.token == token) + ShortLinkDto(token = token, redirectToUrl = updateShortLink.newUrl)
         )

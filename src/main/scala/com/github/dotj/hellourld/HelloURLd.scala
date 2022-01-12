@@ -1,11 +1,9 @@
-package com.github.dotj.hellourld.service
+package com.github.dotj.hellourld
 
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
-import com.github.dotj.hellourld.registry.ShortLinkRegistry
-import com.github.dotj.hellourld.routes.Routes
 
 import scala.util.{Failure, Success}
 
