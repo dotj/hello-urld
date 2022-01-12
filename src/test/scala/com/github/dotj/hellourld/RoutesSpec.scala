@@ -9,7 +9,9 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
-class ShortLinkRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with ScalatestRouteTest {
+import java.net.URL
+
+class RoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with ScalatestRouteTest {
 
   // the Akka HTTP route testkit does not yet support a typed actor system (https://github.com/akka/akka-http/issues/2036)
   // so we have to adapt for now
@@ -23,56 +25,75 @@ class ShortLinkRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures wi
   // but we could "mock" it by implementing it in-place or by using a TestProbe
   // created with testKit.createTestProbe()
   private val shortLinkRegistry = testKit.spawn(ShortLinkRegistry())
-  private lazy val routes = new ShortLinkRoutes(shortLinkRegistry).shortLinkRoutes
+  private lazy val routes = new Routes(shortLinkRegistry).allRoutes
 
   // use the json formats to marshal and unmarshall objects in the test
-  import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
   import JsonFormats._
+  import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 
-  "ShortLinkRoutes" should {
+  // Testing values
+  private val longUrl = new URL("https://wikipedia.com")
+  private val token = "wiki"
+
+  "shortlink routes" should {
     "return no shortlinks if no present (GET /shortlink)" in {
       val request = HttpRequest(uri = "/shortlink")
 
       request ~> routes ~> check {
         status shouldBe StatusCodes.OK
         contentType shouldBe ContentTypes.`application/json`
-        entityAs[String] shouldBe """{"links":[]}"""
+        entityAs[String] shouldBe """{"shortLinks":[]}"""
       }
     }
 
     "be able to add short links (POST /shortlink)" in {
-      val shortLink = ShortLink(alias = "ggg", fullUrl = "google.com")
-      val shortLinkEntity =
-        Marshal(shortLink)
-          .to[MessageEntity]
-          .futureValue // futureValue is from ScalaFutures
+      val shortLink = ShortLinkDto(token = token, redirectToUrl = longUrl.getPath)
+      val shortLinkEntity = Marshal(shortLink).to[MessageEntity].futureValue
 
       val request = Post("/shortlink").withEntity(shortLinkEntity)
 
       request ~> routes ~> check {
         status shouldBe StatusCodes.Created
         contentType shouldBe ContentTypes.`application/json`
-        entityAs[String] shouldBe """{"description":"Shortlink ggg created."}"""
+        entityAs[String] shouldBe s"""{"description":"ShortLink $token created."}"""
       }
     }
 
     "be able to edit short link (PUT /shortlink)" in {
-      val request = Put(uri = "/shortlink/ggg", content = UpdateShortLinkRequest(updatedUrl = "lmgtfy.app"))
+      val request = Put(uri = s"/shortlink/$token", content = UpdateShortLinkRequest(newUrl = "lmgtfy.app"))
 
       request ~> routes ~> check {
         status should ===(StatusCodes.OK)
         contentType shouldBe ContentTypes.`application/json`
-        entityAs[String] shouldBe """{"description":"Shortlink ggg updated."}"""
+        entityAs[String] shouldBe s"""{"description":"ShortLink $token updated."}"""
       }
     }
 
     "be able to remove short link (DELETE /shortlink)" in {
-      val request = Delete(uri = "/shortlink/aaa")
+      val request = Delete(uri = s"/shortlink/${token}")
 
       request ~> routes ~> check {
         status shouldBe StatusCodes.OK
         contentType shouldBe ContentTypes.`application/json`
-        entityAs[String] shouldBe """{"description":"ShortLink aaa deleted."}"""
+        entityAs[String] shouldBe s"""{"description":"ShortLink $token deleted."}"""
+      }
+    }
+
+    "redirect route" should {
+      "redirect to the full url" in {
+        // Create short link
+        val shortLink = ShortLinkDto(token = token, redirectToUrl = longUrl.getPath)
+        val shortLinkEntity = Marshal(shortLink).to[MessageEntity].futureValue
+        val firstRequest = Post("/shortlink").withEntity(shortLinkEntity)
+        firstRequest ~> routes ~> check { status shouldBe StatusCodes.Created }
+
+        // Confirm short link will redirect
+        val secondRequest = HttpRequest(uri = s"/s/$token")
+
+        secondRequest ~> routes ~> check {
+          status shouldBe StatusCodes.TemporaryRedirect
+          // TODO - Add a more thorough check for redirection
+        }
       }
     }
 
