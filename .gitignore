@@ -1,6 +1,7 @@
 *.class
 .idea
 .bsp
+logs/
 target/
 project/
 !project/assembly.sbt
