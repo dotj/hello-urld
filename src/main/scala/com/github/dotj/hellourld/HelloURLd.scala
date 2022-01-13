@@ -29,7 +29,8 @@ object HelloURLd {
       val shortLinkRegistryActor = context.spawn(ShortLinkRegistry(), "ShortLinkRegistryActor")
       context.watch(shortLinkRegistryActor)
 
-      val routes = new Routes(shortLinkRegistryActor)(context.system)
+      val shortLinkManager = new ShortLinkManager(shortLinkRegistryActor)(context.system)
+      val routes = new Routes(shortLinkManager)
       startHttpServer(routes.allRoutes)(context.system)
 
       Behaviors.empty
