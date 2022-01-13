@@ -10,5 +10,4 @@ object JsonFormats {
   implicit val shortLinksJsonFormat: RootJsonFormat[ShortLinksDto] = jsonFormat1(ShortLinksDto)
   implicit val actionPerformedJsonFormat: RootJsonFormat[ActionPerformed] = jsonFormat1(ActionPerformed)
   implicit val updateRequestFormat: RootJsonFormat[UpdateShortLinkRequest] = jsonFormat1(UpdateShortLinkRequest)
-
 }

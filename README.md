@@ -8,10 +8,14 @@ Requirements:
 Building and running:
 
 ```sh
-# To run directly with sbt
+# Before running service, we'll want to have a local instance of postgreSQL running
+docker pull postgres
+docker run --name local-postgres -e POSTGRES_PASSWORD=password -d -p 5432:5432 postgres
+
+# To run service directly with sbt
 sbt run
 
-# To build and deploy with Docker
+# To build and deploy service with Docker
 sbt assembly
 docker build -t scala-app .
 docker run -dp 9999:9999 scala-app

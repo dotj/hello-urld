@@ -8,9 +8,15 @@ import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import com.github.dotj.hellourld.ShortLinkRegistry._
 
+import java.net.URL
+import java.util.UUID
 import scala.concurrent.Future
+import scala.concurrent._
+import ExecutionContext.Implicits.global
 
-class Routes(registry: ActorRef[ShortLinkRegistry.Command])(implicit val system: ActorSystem[_]) {
+class Routes(registry: ActorRef[ShortLinkRegistry.Command], shortLinkManager: ShortLinkManager)(implicit
+    val system: ActorSystem[_]
+) {
 
   import JsonFormats._
   import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
@@ -19,9 +25,9 @@ class Routes(registry: ActorRef[ShortLinkRegistry.Command])(implicit val system:
   private implicit val timeout: Timeout =
     Timeout.create(system.settings.config.getDuration("my-app.routes.ask-timeout"))
 
-  private def findShortLinks(): Future[ShortLinksDto] = registry.ask(FindAll)
+//  private def findShortLinks(): Future[ShortLinksDto] = registry.ask(FindAll)
   private def findShortLink(alias: String): Future[ShortLinkFoundResponse] = registry.ask(Find(alias, _))
-  private def createShortLink(link: ShortLinkDto): Future[ActionPerformed] = registry.ask(Create(link, _))
+//  private def createShortLink(link: ShortLinkDto): Future[ActionPerformed] = registry.ask(Create(link, _))
   private def deleteShortLink(alias: String): Future[ActionPerformed] = registry.ask(Delete(alias, _))
   private def updateShortLink(alias: String, updateShortLinkRequest: UpdateShortLinkRequest): Future[ActionPerformed] =
     registry.ask(Update(alias, updateShortLinkRequest, _))
@@ -43,23 +49,39 @@ class Routes(registry: ActorRef[ShortLinkRegistry.Command])(implicit val system:
 
   private val getShortLinks: Route =
     (get & path(shortLinkBase)) {
-      complete(findShortLinks())
+      complete(
+        shortLinkManager
+          .findAll()
+          .map(DtoTransformers.toDto)
+      )
     }
 
   private val postShortLink: Route =
     (post & path(shortLinkBase)) {
-      entity(as[ShortLinkDto]) { shortLink =>
-        onSuccess(createShortLink(shortLink)) { performed =>
+      entity(as[ShortLinkDto]) { req =>
+        onSuccess(
+          shortLinkManager
+            .create(
+              redirectTo = new URL(req.redirectToUrl),
+              token = Option(req.token),
+              expiration = None
+            )
+            .map(DtoTransformers.toDto)
+        ) { performed =>
           complete((StatusCodes.Created, performed))
         }
       }
     }
 
   private val getShortLink: Route =
-    (get & path(shortLinkBase / Segment)) { pathId =>
+    (get & path(shortLinkBase / "by-token" / Segment)) { pathId =>
       rejectEmptyResponse {
-        onSuccess(findShortLink(pathId)) { response =>
-          complete(response.shortLink)
+        onSuccess(
+          shortLinkManager
+            .get(UUID.fromString(pathId))
+            .map(DtoTransformers.toDto)
+        ) { response =>
+          complete(response)
         }
       }
     }

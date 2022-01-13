@@ -5,11 +5,14 @@ import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
+import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar.mock
 
 import java.net.URL
+import scala.concurrent.Future
 
 class RoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with ScalatestRouteTest {
 
@@ -25,18 +28,22 @@ class RoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Scalat
   // but we could "mock" it by implementing it in-place or by using a TestProbe
   // created with testKit.createTestProbe()
   private val shortLinkRegistry = testKit.spawn(ShortLinkRegistry())
-  private lazy val routes = new Routes(shortLinkRegistry).allRoutes
+  private val shortLinkManager = mock[ShortLinkManager]
+  private lazy val routes = new Routes(shortLinkRegistry, shortLinkManager).allRoutes
 
   // use the json formats to marshal and unmarshall objects in the test
   import JsonFormats._
   import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 
   // Testing values
-  private val longUrl = new URL("https://wikipedia.com")
+  private val redirectTo = new URL("https://wikipedia.com")
   private val token = "wiki"
+  private val shortLink = ShortLink(token = token, redirectTo = redirectTo)
 
   "shortlink routes" should {
-    "return no shortlinks if no present (GET /shortlink)" in {
+    "return no short links if no present (GET /shortlink)" in {
+      when(shortLinkManager.findAll()) thenReturn Future.successful(Seq(shortLink))
+
       val request = HttpRequest(uri = "/shortlink")
 
       request ~> routes ~> check {
@@ -47,7 +54,7 @@ class RoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Scalat
     }
 
     "be able to add short links (POST /shortlink)" in {
-      val shortLink = ShortLinkDto(token = token, redirectToUrl = longUrl.getPath)
+      val shortLink = ShortLinkDto(token = token, redirectToUrl = redirectTo.getPath)
       val shortLinkEntity = Marshal(shortLink).to[MessageEntity].futureValue
 
       val request = Post("/shortlink").withEntity(shortLinkEntity)
@@ -82,7 +89,7 @@ class RoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Scalat
     "redirect route" should {
       "redirect to the full url" in {
         // Create short link
-        val shortLink = ShortLinkDto(token = token, redirectToUrl = longUrl.getPath)
+        val shortLink = ShortLinkDto(token = token, redirectToUrl = redirectTo.getPath)
         val shortLinkEntity = Marshal(shortLink).to[MessageEntity].futureValue
         val firstRequest = Post("/shortlink").withEntity(shortLinkEntity)
         firstRequest ~> routes ~> check { status shouldBe StatusCodes.Created }
