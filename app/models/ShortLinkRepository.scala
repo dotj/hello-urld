@@ -3,7 +3,7 @@ package models
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.JdbcProfile
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.LocalDate
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -16,6 +16,10 @@ class ShortLinkRepository @Inject() (dbConfigProvider: DatabaseConfigProvider)(i
   import dbConfig._
   import profile.api._
 
+  // TODO -
+  //  Ideally, these shortlinks would have a randomly generated ID (bigint/UUID)
+  //  I bumped into some Slick errors while trying to set up Slick so I kept the
+  //  ID as is for now.
   private class ShortLinkTable(tag: Tag) extends Table[ShortLink](tag, "short_link") {
     def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
     def redirectToUrl = column[String]("redirect_to_url")
@@ -42,19 +46,19 @@ class ShortLinkRepository @Inject() (dbConfigProvider: DatabaseConfigProvider)(i
         .result
     }
 
-  def findById(id: Long): Future[Option[ShortLink]] =
+  def findByToken(token: String): Future[Option[ShortLink]] =
     db.run {
       shortLinkTable
-        .filter(_.id === id)
+        .filter(_.token === token)
         .filterNot(_.expired)
         .result
         .headOption
     }
 
-  def findByToken(token: String): Future[Option[ShortLink]] =
+  def findByUrl(url: String): Future[Option[ShortLink]] =
     db.run {
       shortLinkTable
-        .filter(_.token === token)
+        .filter(_.redirectToUrl === url)
         .filterNot(_.expired)
         .result
         .headOption
@@ -69,20 +73,20 @@ class ShortLinkRepository @Inject() (dbConfigProvider: DatabaseConfigProvider)(i
         .map(_ => ())
     }
 
-  def deprecate(id: Long): Future[Unit] =
+  def delete(token: String): Future[Unit] =
     db.run {
       shortLinkTable
-        .filter(_.id === id)
-        .map(_.expired)
-        .update(false)
+        .filter(_.token === token)
+        .delete
         .map(_ => ())
     }
 
-  def delete(id: Long): Future[Unit] =
+  def deprecate(): Future[Unit] =
     db.run {
       shortLinkTable
-        .filter(_.id === id)
-        .delete
+        .filter(_.expiration <= LocalDate.now())
+        .map(_.expired)
+        .update(true)
         .map(_ => ())
     }
 

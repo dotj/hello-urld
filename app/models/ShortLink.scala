@@ -15,3 +15,13 @@ case class ShortLink(
 object ShortLink {
   implicit val slFormat: OFormat[ShortLink] = Json.format[ShortLink]
 }
+
+case class ShortLinkDto(
+    redirectToUrl: String,
+    token: String,
+    expirationDate: Option[LocalDate] = None
+)
+
+object ShortLinkDto {
+  implicit val slDtoFormat: OFormat[ShortLinkDto] = Json.format[ShortLinkDto]
+}

@@ -2,17 +2,19 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-# Home page
-GET     /                           controllers.ShortLinkController.index
+# API
 POST    /shortlink                  controllers.ShortLinkController.addShortLink
 GET     /shortlink                  controllers.ShortLinkController.getShortLinks
-GET     /shortlink/by-token/:token  controllers.ShortLinkController.getShortLinkByToken(token: String)
-PUT     /shortlink/by-token/:token  controllers.ShortLinkController.updateShortLinkByToken(token: String)
-PUT     /shortlink/deprecate/:id    controllers.ShortLinkController.deprecateShortLinkById(id: Long)
-DELETE  /shortlink/:id              controllers.ShortLinkController.deleteShortLinkById(id: Long)
+GET     /shortlink/:token           controllers.ShortLinkController.getShortLinkByToken(token: String)
+PUT     /shortlink/:token           controllers.ShortLinkController.updateShortLinkByToken(token: String)
+DELETE  /shortlink/:token           controllers.ShortLinkController.deleteShortLinkByToken(token: String)
+PUT     /deprecate-shortlinks       controllers.ShortLinkController.deprecateExpiredShortLinks
 
 # Redirect
-GET     /s/:token                   controllers.ShortLinkController.redirectByToken(token)
+GET     /s/:token                   controllers.ShortLinkController.redirectByToken(token: String)
+
+# Form for adding short links
+GET     /                           controllers.ShortLinkController.index
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
