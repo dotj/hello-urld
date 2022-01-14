@@ -109,7 +109,6 @@ class ShortLinkController @Inject() (repo: ShortLinkRepository, cc: MessagesCont
       )(UpdateShortLinkForm.apply)(UpdateShortLinkForm.unapply)
     )
 
-  // TODO - maybe refactor this into a different class
   private def generateToken(length: Int = 10): String = {
     val alphaNumericChars = ('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')
     val sb = new StringBuilder
