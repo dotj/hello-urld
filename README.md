@@ -3,7 +3,7 @@
 Requirements:
 - Java 8 
 - SBT 1.5.5
-- ~~Docker (coming soon hopefully)~~
+- ~~Docker~~ (coming soon hopefully)
 
 Built off the `play-scala-slick-example` sample.
 
@@ -16,8 +16,7 @@ sbt run
 # To run tests (if they were fully implemented :'))
 sbt test
 
-# TODO - Fix docker deployment
-# To build and deploy with Docker
+# TODO - Fix docker deployment, this currently won't work
 #sbt assembly
 #docker build -t scala-app .
 #docker run -dp 9000:9000 scala-app
