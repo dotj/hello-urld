@@ -1,6 +1,6 @@
 package controllers
 
-import models.ShortLinkRepository
+import models.{AnalyticsRepository, ShortLinkRepository}
 import org.scalatest.Ignore
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.specs2.mock.Mockito.mock
@@ -19,8 +19,9 @@ import scala.language.postfixOps
 class ShortLinkControllerSpec extends PlaySpecification with ScalaFutures with IntegrationPatience {
 
   private lazy val repo = mock[ShortLinkRepository]
+  private lazy val analyticsRepo = mock[AnalyticsRepository]
   private lazy val cc = mock[MessagesControllerComponents]
-  private lazy val controller = new ShortLinkController(repo, cc)(mock[ExecutionContext])
+  private lazy val controller = new ShortLinkController(repo, analyticsRepo, cc)(mock[ExecutionContext])
 
   "(GET getShortLinks)" should {
     "return a list of shortlinks" in {

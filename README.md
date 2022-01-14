@@ -13,11 +13,14 @@ Building and running:
 # To run directly with sbt
 sbt run
 
-# TODO - Fix docker deployment issues
+# To run tests (if they were fully implemented :'))
+sbt test
+
+# TODO - Fix docker deployment
 # To build and deploy with Docker
-sbt assembly
-docker build -t scala-app .
-docker run -dp 9000:9000 scala-app
+#sbt assembly
+#docker build -t scala-app .
+#docker run -dp 9000:9000 scala-app
 ```
 
 Server will be running on `http://localhost:9000/`

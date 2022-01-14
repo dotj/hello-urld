@@ -13,32 +13,30 @@ class ShortLinkRepositorySpec extends Specification {
   private lazy val dbConfig = ???
   private lazy val repo = new ShortLinkRepository(dbConfig)(???)
 
-  "ShortLinkRepository" should {
-
-    "create" should {
-      "add the shortlink to db" in { ok }
-    }
-
-    "getAll" should {
-      "return a list of shortlinks" in { ok }
-      "return empty if none are found" in { ok }
-    }
-
-    "update" should {
-      "should update the row in the db" in { ok }
-    }
-
-    "findByToken" should {
-      "should return the shortlink if found" in { ok }
-      "should return None if not found" in { ok }
-    }
-
-    "delete" should {
-      "should delete the shortlink if found" in { ok }
-    }
-
-    "deprecate" should {
-      "should find all rows with a passed expiration date and mark as 'expired'"
-    }
+  "create" should {
+    "add the shortlink to db" in { ok }
   }
+
+  "getAll" should {
+    "return a list of shortlinks" in { ok }
+    "return empty if none are found" in { ok }
+  }
+
+  "update" should {
+    "should update the row in the db" in { ok }
+  }
+
+  "findByToken" should {
+    "should return the shortlink if found" in { ok }
+    "should return None if not found" in { ok }
+  }
+
+  "delete" should {
+    "should delete the shortlink if found" in { ok }
+  }
+
+  "deprecate" should {
+    "should find all rows with a passed expiration date and mark as 'expired'" in { ok }
+  }
+
 }
