@@ -1,0 +1,19 @@
+@(shortLink: Form[CreateShortLinkForm])(implicit request: MessagesRequestHeader)
+
+@import helper._
+
+@request.flash.get("success").map { key =>
+   @request.messages(key)
+}
+
+@main("Welcome to Play") {
+  @form(routes.ShortLinkController.addShortLink) {
+		@inputText(shortLink("redirectToUrl"))
+		@inputText(shortLink("token"))
+		@CSRF.formField
+
+		<div class="buttons">
+			<input type="submit" value="Add short link"/>
+		</div>
+	}
+}

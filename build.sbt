@@ -1,28 +1,23 @@
-lazy val akkaHttpVersion = "10.2.7"
-lazy val akkaVersion = "2.6.18"
-
-// Run in a separate JVM, to make sure sbt waits until all threads have
-// finished before returning.
-// If you want to keep the application running while executing other
-// sbt tasks, consider https://github.com/spray/sbt-revolver/
-fork := true
-
-lazy val root = (project in file(".")).settings(
-  inThisBuild(
-    List(
-      organization := "com.github.dotj",
-      scalaVersion := "2.13.4"
+lazy val root = (project in file("."))
+  .enablePlugins(PlayScala)
+  .settings(
+    name := "hello-urld",
+    version := "0.1.0",
+    scalaVersion := "2.13.6",
+    assemblyMergeStrategy in assembly := {
+      case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+      case x                             => MergeStrategy.first
+    },
+    libraryDependencies ++= Seq(
+      guice,
+      "com.typesafe.play" %% "play-slick" % "5.0.0",
+      "com.typesafe.play" %% "play-slick-evolutions" % "5.0.0",
+      "com.h2database" % "h2" % "2.0.206",
+      specs2 % Test
+    ),
+    scalacOptions ++= Seq(
+      "-feature",
+      "-deprecation",
+      "-Xfatal-warnings"
     )
-  ),
-  name := "hello-urld",
-  libraryDependencies ++= Seq(
-    "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-    "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
-    "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
-    "com.typesafe.akka" %% "akka-stream" % akkaVersion,
-    "ch.qos.logback" % "logback-classic" % "1.2.3",
-    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % Test,
-    "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion % Test,
-    "org.scalatest" %% "scalatest" % "3.1.4" % Test
   )
-)
