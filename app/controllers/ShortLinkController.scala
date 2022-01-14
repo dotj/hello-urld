@@ -13,7 +13,11 @@ import scala.concurrent.{ExecutionContext, Future}
 case class CreateShortLinkForm(redirectToUrl: String, token: Option[String], expirationDate: Option[LocalDate])
 case class UpdateShortLinkForm(redirectToUrl: String, expirationDate: Option[LocalDate])
 
-class ShortLinkController @Inject() (repo: ShortLinkRepository, cc: MessagesControllerComponents)(implicit
+class ShortLinkController @Inject() (
+    repo: ShortLinkRepository,
+    analyticsRepo: AnalyticsRepository,
+    cc: MessagesControllerComponents
+)(implicit
     ec: ExecutionContext
 ) extends MessagesAbstractController(cc) {
 
@@ -29,7 +33,8 @@ class ShortLinkController @Inject() (repo: ShortLinkRepository, cc: MessagesCont
           Future.successful(BadRequest(s"$err"))
         },
         req => {
-          // Play's built-in request validators are synchronous so we have to do
+          // Play's built-in request validators are synchronous, but we also
+          // want to check the DB for existing URLs/tokens, so we have to do
           // some extra error handling here
           val result = for {
             existingUrl <- repo.findByUrl(req.redirectToUrl)
@@ -95,10 +100,28 @@ class ShortLinkController @Inject() (repo: ShortLinkRepository, cc: MessagesCont
     repo
       .findByToken(token)
       .map {
-        case Some(link) => TemporaryRedirect(link.redirectToUrl)
-        case _          => NotFound(s"Shortlink with token: $token not found")
+        case Some(link) =>
+          incrementHitCounter(token)
+          TemporaryRedirect(link.redirectToUrl)
+        case _ => NotFound(s"Shortlink with token: $token not found")
       }
   }
+
+  def getAnalytics(token: String): Action[AnyContent] = Action.async { implicit request =>
+    analyticsRepo
+      .getOrInitCount(token)
+      .map(count => Ok(Json.toJson(count)))
+  }
+
+  // TODO -
+  //  Mutating updates is not supported in Slick so we're querying the db twice,
+  //  which isn't ideal. A query in an `increment` method could be better.
+  //  https://github.com/slick/slick/issues/497
+  private def incrementHitCounter(token: String): Future[Unit] =
+    for {
+      current <- analyticsRepo.getOrInitCount(token)
+      _ <- analyticsRepo.updateCount(token, current + 1)
+    } yield ()
 
   private val createShortLinkForm: Form[CreateShortLinkForm] =
     Form(

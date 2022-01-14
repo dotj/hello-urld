@@ -13,6 +13,9 @@ PUT     /deprecate-shortlinks       controllers.ShortLinkController.deprecateExp
 # Redirect
 GET     /s/:token                   controllers.ShortLinkController.redirectByToken(token: String)
 
+# Analytics
+GET     /analytics/:token           controllers.ShortLinkController.getAnalytics(token: String)
+
 # Form for adding short links
 GET     /                           controllers.ShortLinkController.index
 
