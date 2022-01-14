@@ -9,36 +9,26 @@ import play.api.mvc._
 import javax.inject._
 import scala.concurrent.{ExecutionContext, Future}
 
+case class CreateShortLinkForm(redirectToUrl: String, token: String)
+case class UpdateShortLinkForm(redirectToUrl: String)
+
 class ShortLinkController @Inject() (repo: ShortLinkRepository, cc: MessagesControllerComponents)(implicit
     ec: ExecutionContext
 ) extends MessagesAbstractController(cc) {
 
-  val shortLinkForm: Form[CreateShortLinkForm] = Form {
-    mapping(
-      "redirectToUrl" -> nonEmptyText, // TODO validate inputs
-      "token" -> nonEmptyText
-    )(CreateShortLinkForm.apply)(CreateShortLinkForm.unapply)
-  }
-
   def index: Action[AnyContent] = Action { implicit request =>
-    Ok(views.html.index(shortLinkForm))
+    Ok(views.html.index(createShortLinkForm))
   }
 
   def addShortLink: Action[AnyContent] = Action.async { implicit request =>
-    // Bind the form first, then fold the result, passing a function to handle errors, and a function to handle succes.
-    shortLinkForm
+    createShortLinkForm
       .bindFromRequest()
       .fold(
-        // The error function. We return the index page with the error form, which will render the errors.
-        // We also wrap the result in a successful future, since this action is synchronous, but we're required to return
-        // a future because the short link creation function returns a future.
         errorForm => {
           Future.successful(Ok(views.html.index(errorForm)))
         },
-        // There were no errors in the from, so create the short link.
         shortLink => {
           repo.create(shortLink.redirectToUrl, shortLink.token).map { _ =>
-            // If successful, we simply redirect to the index page.
             Redirect(routes.ShortLinkController.index).flashing("success" -> "shortLink.created")
           }
         }
@@ -46,16 +36,62 @@ class ShortLinkController @Inject() (repo: ShortLinkRepository, cc: MessagesCont
   }
 
   def getShortLinks: Action[AnyContent] = Action.async { implicit request =>
-    repo.list().map { shortLink =>
-      Ok(Json.toJson(shortLink))
-    }
+    for {
+      allLinks <- repo.getAll()
+      result = Ok(Json.toJson(allLinks))
+    } yield result
   }
-}
 
-/** The create short link form.
-  *
-  * Generally for forms, you should define separate objects to your models, since forms very often need to present data
-  * in a different way to your models.  In this case, it doesn't make sense to have an id parameter in the form, since
-  * that is generated once it's created.
-  */
-case class CreateShortLinkForm(redirectToUrl: String, token: String)
+  def getShortLinkByToken(token: String): Action[AnyContent] = Action.async { implicit request =>
+    for {
+      link <- repo.findByToken(token)
+      result = Ok(Json.toJson(link))
+    } yield result
+  }
+
+  def updateShortLinkByToken(token: String): Action[AnyContent] = Action.async { implicit request =>
+    updateShortLinkForm
+      .bindFromRequest()
+      .fold(
+        err => {
+          Future.successful(NotFound(s"$err"))
+        },
+        req => {
+          repo
+            .update(token, req.redirectToUrl)
+            .map(result => Ok(s"Update successful"))
+        }
+      )
+  }
+
+  def deleteShortLinkById(id: String): Action[AnyContent] = Action.async { implicit request =>
+    repo
+      .delete(id.toLong)
+      .map(_ => Ok(s"Delete successful"))
+  }
+
+  def redirectByToken(token: String): Action[AnyContent] = Action.async { implicit request =>
+    repo
+      .findByToken(token)
+      .map {
+        case Some(link) => TemporaryRedirect(link.redirectToUrl)
+        case _          => NotFound(s"Token: $token not found")
+      }
+  }
+
+  // Request form validation and mapping
+  val createShortLinkForm: Form[CreateShortLinkForm] =
+    Form(
+      mapping(
+        "redirectToUrl" -> nonEmptyText, // TODO validate inputs
+        "token" -> nonEmptyText
+      )(CreateShortLinkForm.apply)(CreateShortLinkForm.unapply)
+    )
+
+  val updateShortLinkForm: Form[UpdateShortLinkForm] =
+    Form(
+      mapping(
+        "redirectToUrl" -> nonEmptyText
+      )(UpdateShortLinkForm.apply)(UpdateShortLinkForm.unapply)
+    )
+}

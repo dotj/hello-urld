@@ -31,7 +31,31 @@ class ShortLinkRepository @Inject() (dbConfigProvider: DatabaseConfigProvider)(i
       into ((link, id) => ShortLink(id, link._1, link._2))) += (redirectToUrl, token)
   }
 
-  def list(): Future[Seq[ShortLink]] = db.run {
+  def getAll(): Future[Seq[ShortLink]] = db.run {
     shortLinkTable.result
   }
+
+  def findById(id: Long): Future[Option[ShortLink]] = db.run {
+    shortLinkTable.filter(_.id === id).result.headOption
+  }
+
+  def findByToken(token: String): Future[Option[ShortLink]] = db.run {
+    shortLinkTable.filter(_.token === token).result.headOption
+  }
+
+  def update(token: String, newRedirectToUrl: String): Future[Unit] = db.run {
+    shortLinkTable
+      .filter(_.token === token)
+      .map(_.redirectToUrl)
+      .update(newRedirectToUrl)
+      .map(_ => ())
+  }
+
+  def delete(id: Long): Future[Unit] = db.run {
+    shortLinkTable
+      .filter(_.id === id)
+      .delete
+      .map(_ => ())
+  }
+
 }
