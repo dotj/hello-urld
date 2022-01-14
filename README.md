@@ -22,7 +22,10 @@ docker run -dp 9000:9000 scala-app
 
 Server will be running on `http://localhost:9000/`
 
-## API examples
+## API
+- API can be found in the (`conf.routes`)[https://github.com/dotj/hello-urld/blob/main/conf/routes] file.
+
+### Examples
 
 ```sh
 # Using cURL on bash.
@@ -84,4 +87,7 @@ curl -X PUT 'http:/localhost:9000/deprecate-shortlinks'
 
 # Redirected shortlink at: http://localhost:9999/s/{token}
 # e.g., http://localhost:9999/s/ggg will redirect to https://lmgtfy.app/
+
+# Analytics can be found at http://localhost:9999/analytics/{token}
+
 ```
