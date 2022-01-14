@@ -6,7 +6,6 @@ import play.api.data.Forms._
 import play.api.libs.json.Json
 import play.api.mvc._
 
-import java.net.URI
 import java.time.LocalDate
 import javax.inject._
 import scala.concurrent.{ExecutionContext, Future}
@@ -29,14 +28,19 @@ class ShortLinkController @Inject() (repo: ShortLinkRepository, cc: MessagesCont
         err => {
           Future.successful(BadRequest(s"$err"))
         },
-        createRequest => {
-          val url = URI.create(createRequest.redirectToUrl)
-          val token = createRequest.token.getOrElse(generateToken())
-          val expiration = createRequest.expirationDate
+        req => {
+          // Play's built-in request validators are synchronous so we have to do
+          // some extra error handling here
+          val result = for {
+            existingUrl <- repo.findByUrl(req.redirectToUrl)
+            token = req.token.getOrElse(generateToken())
+            existingToken <- repo.findByToken(token)
+            if existingUrl.isEmpty && existingToken.isEmpty
+            created <- repo.create(req.redirectToUrl, token, req.expirationDate)
+            dto = toDto(created)
+          } yield Created(Json.toJson(dto))
 
-          repo.create(url.toString, token, expiration).map { created =>
-            Ok(Json.toJson(created))
-          }
+          result.recover(_ => BadRequest("URL or token already exists"))
         }
       )
   }
@@ -44,15 +48,15 @@ class ShortLinkController @Inject() (repo: ShortLinkRepository, cc: MessagesCont
   def getShortLinks: Action[AnyContent] = Action.async { implicit request =>
     for {
       allLinks <- repo.getAll()
-      result = Ok(Json.toJson(allLinks))
-    } yield result
+      dto = allLinks.map(toDto)
+    } yield Ok(Json.toJson(dto))
   }
 
   def getShortLinkByToken(token: String): Action[AnyContent] = Action.async { implicit request =>
     for {
       link <- repo.findByToken(token)
-      result = Ok(Json.toJson(link))
-    } yield result
+      dto = link.map(toDto)
+    } yield Ok(Json.toJson(dto))
   }
 
   def updateShortLinkByToken(token: String): Action[AnyContent] = Action.async { implicit request =>
@@ -70,16 +74,21 @@ class ShortLinkController @Inject() (repo: ShortLinkRepository, cc: MessagesCont
       )
   }
 
-  def deprecateShortLinkById(id: Long): Action[AnyContent] = Action.async { implicit request =>
+  def deleteShortLinkByToken(token: String): Action[AnyContent] = Action.async { implicit request =>
     repo
-      .delete(id)
-      .map(_ => Ok(s"Shortlink successfully deprecated"))
+      .delete(token)
+      .map(_ => Ok(s"Delete successful"))
   }
 
-  def deleteShortLinkById(id: Long): Action[AnyContent] = Action.async { implicit request =>
+  // TODO -
+  //   Currently, we have a way of specifying expiration dates for shortlinks,
+  //   but they won't actually expire unless we manually hit this endpoint.
+  //   If we don't expect a ton of traffic, one way we could automate the
+  //   expiration is by hitting this endpoint via a cron job.
+  def deprecateExpiredShortLinks: Action[AnyContent] = Action.async { implicit request =>
     repo
-      .delete(id)
-      .map(_ => Ok(s"Shortlink successfully deleted"))
+      .deprecate()
+      .map(_ => Ok(s"Expired shortlinks successfully deprecated"))
   }
 
   def redirectByToken(token: String): Action[AnyContent] = Action.async { implicit request =>
@@ -87,27 +96,36 @@ class ShortLinkController @Inject() (repo: ShortLinkRepository, cc: MessagesCont
       .findByToken(token)
       .map {
         case Some(link) => TemporaryRedirect(link.redirectToUrl)
-        case _          => NotFound(s"Token: $token not found")
+        case _          => NotFound(s"Shortlink with token: $token not found")
       }
   }
 
-  // Request form validation and mapping
-  val createShortLinkForm: Form[CreateShortLinkForm] =
+  private val createShortLinkForm: Form[CreateShortLinkForm] =
     Form(
       mapping(
-        "redirectToUrl" -> nonEmptyText,
-        "token" -> optional(text),
+        "redirectToUrl" -> nonEmptyText.verifying("Malformed URL", u => validateUri(u)),
+        "token" -> optional(text), // TODO - add more token validation
         "expirationDate" -> optional(localDate)
       )(CreateShortLinkForm.apply)(CreateShortLinkForm.unapply)
     )
 
-  val updateShortLinkForm: Form[UpdateShortLinkForm] =
+  private val updateShortLinkForm: Form[UpdateShortLinkForm] =
     Form(
       mapping(
         "redirectToUrl" -> nonEmptyText,
         "expirationDate" -> optional(localDate)
       )(UpdateShortLinkForm.apply)(UpdateShortLinkForm.unapply)
     )
+
+  // TODO -
+  //  Find/write a util that does a more thorough validation.
+  //  https://stackoverflow.com/questions/19267856/play-framework-url-validator
+  private def validateUri(str: String): Boolean = {
+    val regex = "((http|https)://)(www.)?" +
+      "[a-zA-Z0-9@:%._\\+~#?&//=]{2,256}\\.[a-z]" +
+      "{2,6}\\b([-a-zA-Z0-9@:%._\\+~#?&//=]*)"
+    str.matches(regex)
+  }
 
   private def generateToken(length: Int = 10): String = {
     val alphaNumericChars = ('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')
@@ -120,4 +138,8 @@ class ShortLinkController @Inject() (repo: ShortLinkRepository, cc: MessagesCont
 
     sb.toString
   }
+
+  private def toDto(model: ShortLink): ShortLinkDto =
+    ShortLinkDto(redirectToUrl = model.redirectToUrl, token = model.token, expirationDate = model.expirationDate)
+
 }

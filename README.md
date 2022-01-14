@@ -22,7 +22,7 @@ docker run -dp 9000:9000 scala-app
 
 Server will be running on `http://localhost:9000/`
 
-## API (WIP)
+## API examples
 
 ```sh
 # Using cURL on bash.
@@ -41,31 +41,47 @@ curl -X POST \
     "expirationDate": "2022-02-02"
   }'
 
+curl -X POST \
+  'http:/localhost:9000/shortlink' \
+  -H 'Content-Type:application/json' \
+  -d '{
+    "token": "wiki",
+    "redirectToUrl": "https://www.wikipedia.org/"
+  }'
+
 # token and expirationDate are optional
 curl -X POST \
   'http:/localhost:9000/shortlink' \
   -H 'Content-Type:application/json' \
   -d '{
-    "redirectToUrl": "https://www.wikipedia.org/"
+    "redirectToUrl": "https://www.nytimes.com/"
   }'
 
-# Delete a shortlink
-curl -X DELETE 'http:/localhost:9000/shortlink/2'
+# Delete a shortlink by token
+curl -X DELETE 'http:/localhost:9000/shortlink/wiki'
 
-# Edit a shortlink
+# Edit a shortlink by token
 curl -X PUT \
-  'http:/localhost:9000/shortlink/by-token/ggg' \
+  'http:/localhost:9000/shortlink/ggg' \
   -H 'Content-Type:application/json' \
   -d '{
     "redirectToUrl": "https://lmgtfy.app/"
   }'
 
-# Deprecate
-curl -X PUT \
-  'http:/localhost:9000/shortlink/deprecate/1' \
+# Expiring endpoints
+# Mocking an expired shortlink
+curl -X POST \
+  'http:/localhost:9000/shortlink' \
   -H 'Content-Type:application/json' \
-  -d '{}'
+  -d '{
+    "token": "yyy",
+    "redirectToUrl": "https://yahoo.com",
+    "expirationDate": "2012-01-01"
+  }'
 
+# Manually deprecate links with an expiration date before today
+curl -X PUT 'http:/localhost:9000/deprecate-shortlinks'
 
-# Redirected shortlink at: http://localhost:9999/s/wiki
+# Redirected shortlink at: http://localhost:9999/s/{token}
+# e.g., http://localhost:9999/s/ggg will redirect to https://lmgtfy.app/
 ```
