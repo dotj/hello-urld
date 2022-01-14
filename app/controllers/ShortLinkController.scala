@@ -6,11 +6,13 @@ import play.api.data.Forms._
 import play.api.libs.json.Json
 import play.api.mvc._
 
+import java.net.URI
+import java.time.LocalDate
 import javax.inject._
 import scala.concurrent.{ExecutionContext, Future}
 
-case class CreateShortLinkForm(redirectToUrl: String, token: String)
-case class UpdateShortLinkForm(redirectToUrl: String)
+case class CreateShortLinkForm(redirectToUrl: String, token: Option[String], expirationDate: Option[LocalDate])
+case class UpdateShortLinkForm(redirectToUrl: String, expirationDate: Option[LocalDate])
 
 class ShortLinkController @Inject() (repo: ShortLinkRepository, cc: MessagesControllerComponents)(implicit
     ec: ExecutionContext
@@ -24,12 +26,16 @@ class ShortLinkController @Inject() (repo: ShortLinkRepository, cc: MessagesCont
     createShortLinkForm
       .bindFromRequest()
       .fold(
-        errorForm => {
-          Future.successful(Ok(views.html.index(errorForm)))
+        err => {
+          Future.successful(BadRequest(s"$err"))
         },
-        shortLink => {
-          repo.create(shortLink.redirectToUrl, shortLink.token).map { _ =>
-            Redirect(routes.ShortLinkController.index).flashing("success" -> "shortLink.created")
+        createRequest => {
+          val url = URI.create(createRequest.redirectToUrl)
+          val token = createRequest.token.getOrElse(generateToken())
+          val expiration = createRequest.expirationDate
+
+          repo.create(url.toString, token, expiration).map { created =>
+            Ok(Json.toJson(created))
           }
         }
       )
@@ -59,15 +65,21 @@ class ShortLinkController @Inject() (repo: ShortLinkRepository, cc: MessagesCont
         req => {
           repo
             .update(token, req.redirectToUrl)
-            .map(result => Ok(s"Update successful"))
+            .map(_ => Ok(s"Update successful"))
         }
       )
   }
 
-  def deleteShortLinkById(id: String): Action[AnyContent] = Action.async { implicit request =>
+  def deprecateShortLinkById(id: Long): Action[AnyContent] = Action.async { implicit request =>
     repo
-      .delete(id.toLong)
-      .map(_ => Ok(s"Delete successful"))
+      .delete(id)
+      .map(_ => Ok(s"Shortlink successfully deprecated"))
+  }
+
+  def deleteShortLinkById(id: Long): Action[AnyContent] = Action.async { implicit request =>
+    repo
+      .delete(id)
+      .map(_ => Ok(s"Shortlink successfully deleted"))
   }
 
   def redirectByToken(token: String): Action[AnyContent] = Action.async { implicit request =>
@@ -83,15 +95,29 @@ class ShortLinkController @Inject() (repo: ShortLinkRepository, cc: MessagesCont
   val createShortLinkForm: Form[CreateShortLinkForm] =
     Form(
       mapping(
-        "redirectToUrl" -> nonEmptyText, // TODO validate inputs
-        "token" -> nonEmptyText
+        "redirectToUrl" -> nonEmptyText,
+        "token" -> optional(text),
+        "expirationDate" -> optional(localDate)
       )(CreateShortLinkForm.apply)(CreateShortLinkForm.unapply)
     )
 
   val updateShortLinkForm: Form[UpdateShortLinkForm] =
     Form(
       mapping(
-        "redirectToUrl" -> nonEmptyText
+        "redirectToUrl" -> nonEmptyText,
+        "expirationDate" -> optional(localDate)
       )(UpdateShortLinkForm.apply)(UpdateShortLinkForm.unapply)
     )
+
+  private def generateToken(length: Int = 10): String = {
+    val alphaNumericChars = ('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')
+    val sb = new StringBuilder
+
+    (1 to length).foreach(_ => {
+      val randomNum = util.Random.nextInt(alphaNumericChars.length)
+      sb.append(alphaNumericChars(randomNum))
+    })
+
+    sb.toString
+  }
 }

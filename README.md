@@ -37,14 +37,15 @@ curl -X POST \
   -H 'Content-Type:application/json' \
   -d '{
     "token": "ggg",
-    "redirectToUrl": "https://google.com"
+    "redirectToUrl": "https://google.com",
+    "expirationDate": "2022-02-02"
   }'
 
+# token and expirationDate are optional
 curl -X POST \
   'http:/localhost:9000/shortlink' \
   -H 'Content-Type:application/json' \
   -d '{
-    "token": "wiki",
     "redirectToUrl": "https://www.wikipedia.org/"
   }'
 
@@ -58,6 +59,13 @@ curl -X PUT \
   -d '{
     "redirectToUrl": "https://lmgtfy.app/"
   }'
+
+# Deprecate
+curl -X PUT \
+  'http:/localhost:9000/shortlink/deprecate/1' \
+  -H 'Content-Type:application/json' \
+  -d '{}'
+
 
 # Redirected shortlink at: http://localhost:9999/s/wiki
 ```

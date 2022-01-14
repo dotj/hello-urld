@@ -6,9 +6,10 @@
 GET     /                           controllers.ShortLinkController.index
 POST    /shortlink                  controllers.ShortLinkController.addShortLink
 GET     /shortlink                  controllers.ShortLinkController.getShortLinks
-GET     /shortlink/by-token/:token  controllers.ShortLinkController.getShortLinkByToken(token)
-PUT     /shortlink/by-token/:token  controllers.ShortLinkController.updateShortLinkByToken(token)
-DELETE  /shortlink/:id              controllers.ShortLinkController.deleteShortLinkById(id)
+GET     /shortlink/by-token/:token  controllers.ShortLinkController.getShortLinkByToken(token: String)
+PUT     /shortlink/by-token/:token  controllers.ShortLinkController.updateShortLinkByToken(token: String)
+PUT     /shortlink/deprecate/:id    controllers.ShortLinkController.deprecateShortLinkById(id: Long)
+DELETE  /shortlink/:id              controllers.ShortLinkController.deleteShortLinkById(id: Long)
 
 # Redirect
 GET     /s/:token                   controllers.ShortLinkController.redirectByToken(token)
