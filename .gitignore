@@ -3,5 +3,5 @@
 .bsp
 logs/
 target/
-project/
-!project/assembly.sbt
+project/target/
+project/project/

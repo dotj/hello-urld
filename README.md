@@ -13,6 +13,7 @@ Building and running:
 # To run directly with sbt
 sbt run
 
+# TODO - Fix docker deployment issues
 # To build and deploy with Docker
 sbt assembly
 docker build -t scala-app .
