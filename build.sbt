@@ -4,7 +4,6 @@ lazy val root = (project in file("."))
     name := "hello-urld",
     version := "0.1.0",
     scalaVersion := "2.13.6",
-    mainClass := Some("controllers.ShortLinkController"),
     assemblyMergeStrategy in assembly := {
       case PathList("META-INF", _*) => MergeStrategy.discard
       case _                        => MergeStrategy.first

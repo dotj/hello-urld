@@ -1,9 +1,8 @@
 # hello-urld
 
 Requirements:
-- Java 8 
-- SBT 1.5.5
-- ~~Docker~~ (coming soon hopefully)
+- Java 8
+- Docker or SBT 1.5.5
 
 Built off the `play-scala-slick-example` sample.
 
@@ -16,10 +15,9 @@ sbt run
 # To run tests (if they were fully implemented :'))
 sbt test
 
-# TODO - Fix docker deployment, this currently won't work
-#sbt assembly
-#docker build -t scala-app .
-#docker run -dp 9000:9000 scala-app
+# Run with Docker
+docker build -t hello-urld .
+docker run -dp 9000:9000 hello-urld
 ```
 
 Server will be running on `http://localhost:9000/`.
@@ -98,7 +96,7 @@ curl -X PUT 'http:/localhost:9000/deprecate-shortlinks'
 
 ##  To do / other considerations
 
-- [ ] Dockerize
+- [x] Dockerize
   - The [`play-scala-slick-example`](https://github.com/playframework/play-samples/tree/2.8.x/play-scala-slick-example)
     repo I used as a base has both a development mode and a production mode. Using `sbt run` runs the app in 
     development mode, which automatically boots a dev database, so you can run the app locally.
@@ -106,7 +104,7 @@ curl -X PUT 'http:/localhost:9000/deprecate-shortlinks'
     - Set up production mode (see [docs](https://www.playframework.com/documentation/2.8.x/ProductionConfiguration),
        this is much more involved.). 
     - Figure out how to build the fat .jar properly.
-    - OR, figure out a way to run development mode in Docker.
+    - *OR, figure out a way to run development mode in Docker.*
 - [ ] Implement unit tests
 - [ ] Cron job (or some other processing service?) to deprecate expired shortlinks
 - [ ] Use a randomized ID for shortlinks
