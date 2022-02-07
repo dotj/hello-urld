@@ -13,9 +13,10 @@ lazy val root = (project in file("."))
       "com.typesafe.play" %% "play-slick" % "5.0.0",
       "com.typesafe.play" %% "play-slick-evolutions" % "5.0.0",
       "com.h2database" % "h2" % "2.1.210",
-      specs2 % Test,
+      specs2 % Test, // includes mockito
       "org.scalatest" %% "scalatest" % "3.2.9" % Test,
-      "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % "test"
+      "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % Test,
+      "org.scalacheck" %% "scalacheck" % "1.15.4" % Test
     ),
     scalacOptions ++= Seq(
       "-feature",
