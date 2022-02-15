@@ -12,7 +12,7 @@ Built off the `play-scala-slick-example` sample.
 # To run directly with sbt
 sbt run
 
-# To run tests (if they were fully implemented :'))
+# To run tests
 sbt test
 
 # Run with Docker
@@ -105,7 +105,7 @@ curl -X PUT 'http:/localhost:9000/deprecate-shortlinks'
        this is much more involved.). 
     - Figure out how to build the fat .jar properly.
     - *OR, figure out a way to run development mode in Docker.*
-- [ ] Implement unit tests - in progress
+- [x] Implement unit tests
 - [ ] Cron job (or some other processing service?) to deprecate expired shortlinks
 - [ ] Use a randomized ID for shortlinks
   - The shortlinks are currently enumerated. Ideally I'd use a UUID or a randomly generated bigint depending on how 
