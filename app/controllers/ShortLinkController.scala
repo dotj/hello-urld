@@ -10,6 +10,9 @@ import java.time.LocalDate
 import javax.inject._
 import scala.concurrent.{ExecutionContext, Future}
 
+import java.util.Base64
+import java.nio.charset.StandardCharsets
+
 case class CreateShortLinkForm(redirectToUrl: String, token: Option[String], expirationDate: Option[LocalDate])
 case class UpdateShortLinkForm(redirectToUrl: String, expirationDate: Option[LocalDate])
 
@@ -25,6 +28,13 @@ class ShortLinkController @Inject() (
     Ok(views.html.index(createShortLinkForm))
   }
 
+  // Base64.getEncoder.encodeToString("user:pass".getBytes(StandardCharsets.UTF_8))
+  val user = "myuser"
+  val pass = "mypass"
+  val encodedAuth = Base64.getEncoder.encodeToString(s"$user:$pass".getBytes(StandardCharsets.UTF_8))
+
+  // TODO
+  // add role
   def addShortLink: Action[AnyContent] = Action.async { implicit request =>
     createShortLinkForm
       .bindFromRequest()
@@ -79,10 +89,17 @@ class ShortLinkController @Inject() (
       )
   }
 
+  // TODO
   def deleteShortLinkByToken(token: String): Action[AnyContent] = Action.async { implicit request =>
-    repo
-      .delete(token)
-      .map(_ => Ok(s"Delete successful"))
+    val authToken: String = request.headers.get("Authorization").get.split(" ")(1) // should be bXl1c2VyOm15cGFzcw==
+    if (authToken == encodedAuth) {
+      // Base64.getEncoder.encodeToString("user:pass".getBytes(StandardCharsets.UTF_8))
+      repo
+        .delete(token)
+        .map(_ => Ok(s"Delete successful"))
+    } else {
+      Future(Unauthorized)
+    }
   }
 
   // TODO -

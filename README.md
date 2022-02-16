@@ -92,6 +92,30 @@ curl -X PUT 'http:/localhost:9000/deprecate-shortlinks'
 # e.g., http://localhost:9999/s/ggg will redirect to https://lmgtfy.app/
 
 # Analytics can be found at http://localhost:9999/analytics/{token}
+
+
+# Adding auth
+`curl -vv --basic -u myuser:mypass http://....`
+`Authorization: Basic bXl1c2VyOm15cGFzcw==`
+
+
+# Create a shortlink with auth
+# -u myuser:mypass -> bXl1c2VyOm15cGFzcw==
+curl -X POST \
+  'http:/localhost:9000/shortlink' \
+  -H 'Content-Type:application/json' \
+  -H 'Authorization: Basic bXl1c2VyOm15cGFzcw==` \
+  -d '{
+    "token": "ggg",
+    "redirectToUrl": "https://google.com",
+    "expirationDate": "2022-02-02"
+  }'
+
+
+curl -X DELETE \
+  -H 'Authorization: Basic bXl1c2VyOm15cGFzcw==' \
+  'http:/localhost:9000/shortlink/ggg'
+
 ```
 
 ##  To do / other considerations
