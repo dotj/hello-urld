@@ -92,6 +92,10 @@ class ShortLinkController @Inject() (
   // TODO
   def deleteShortLinkByToken(token: String): Action[AnyContent] = Action.async { implicit request =>
     val authToken: String = request.headers.get("Authorization").get.split(" ")(1) // should be bXl1c2VyOm15cGFzcw==
+
+    print(authToken)
+    print(encodedAuth)
+
     if (authToken == encodedAuth) {
       // Base64.getEncoder.encodeToString("user:pass".getBytes(StandardCharsets.UTF_8))
       repo
