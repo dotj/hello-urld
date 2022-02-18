@@ -8,6 +8,8 @@ import java.security.MessageDigest
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
+// TODO - finish class
+
 /** @param dbConfigProvider The Play db config provider. Play will inject this for you.
   */
 @Singleton

@@ -93,23 +93,14 @@ curl -X PUT 'http:/localhost:9000/deprecate-shortlinks'
 
 # Analytics can be found at http://localhost:9000/analytics/{token}
 
-# Adding auth
+# Adding basic auth
 `curl -vv --basic -u myuser:mypass http://....`
 `Authorization: Basic bXl1c2VyOm15cGFzcw==`
 
 # Create a shortlink with auth
 # -u myuser:mypass -> bXl1c2VyOm15cGFzcw==
-curl -X POST \
-  'http:/localhost:9000/shortlink' \
-  -H 'Content-Type:application/json' \
-  -H 'Authorization: Basic bXl1c2VyOm15cGFzcw==` \
-  -d '{
-    "token": "ggg",
-    "redirectToUrl": "https://google.com",
-    "expirationDate": "2022-02-02"
-  }'
 
-# wrong auth
+# wrong auth, should not delete
 curl -X DELETE \
   -H 'Authorization: Basic AAAA' \
   'http:/localhost:9000/shortlink/ggg'
@@ -118,12 +109,6 @@ curl -X DELETE \
 curl -X DELETE \
   -H 'Authorization: Basic bXl1c2VyOm15cGFzcw==' \
   'http:/localhost:9000/shortlink/ggg'
-
---- 
-
-# Register users
-- new table - user table - username, password 
-- api to create/delete users
 
 ```
 
@@ -146,3 +131,7 @@ curl -X DELETE \
 - [ ] Extend analytics API 
   - Add more views and filtering and sorting options.
   - This will depend heavily on product needs as well (i.e., are they using Google Analytics UTM params? Or will they be querying our service db?)
+- [ ] Register users for auth
+  - new table - user table - username, password
+  - api to create/delete users
+  - Use registered users in auth

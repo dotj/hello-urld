@@ -24,7 +24,6 @@ class ShortLinkController @Inject() (manager: ShortLinkManager, cc: MessagesCont
     Ok(views.html.index(createShortLinkForm))
   }
 
-  // Base64.getEncoder.encodeToString("user:pass".getBytes(StandardCharsets.UTF_8))
   val user = "myuser"
   val pass = "mypass"
   val encodedAuth = Base64.getEncoder.encodeToString(s"$user:$pass".getBytes(StandardCharsets.UTF_8))
@@ -73,7 +72,6 @@ class ShortLinkController @Inject() (manager: ShortLinkManager, cc: MessagesCont
       )
   }
 
-  // TODO
   def deleteShortLinkByToken(token: String): Action[AnyContent] = Action.async { implicit request =>
     {
       val authToken: String = request.headers.get("Authorization").get.split(" ")(1) // should be bXl1c2VyOm15cGFzcw==
