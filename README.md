@@ -12,7 +12,7 @@ Built off the `play-scala-slick-example` sample.
 # To run directly with sbt
 sbt run
 
-# To run tests (if they were fully implemented :'))
+# To run tests
 sbt test
 
 # Run with Docker
@@ -88,16 +88,14 @@ curl -X POST \
 # Manually deprecate links with an expiration date before today
 curl -X PUT 'http:/localhost:9000/deprecate-shortlinks'
 
-# Redirected shortlink at: http://localhost:9999/s/{token}
-# e.g., http://localhost:9999/s/ggg will redirect to https://lmgtfy.app/
+# Redirected shortlink at: http://localhost:9000/s/{token}
+# e.g., http://localhost:9000/s/ggg will redirect to https://lmgtfy.app/
 
-# Analytics can be found at http://localhost:9999/analytics/{token}
-
+# Analytics can be found at http://localhost:9000/analytics/{token}
 
 # Adding auth
 `curl -vv --basic -u myuser:mypass http://....`
 `Authorization: Basic bXl1c2VyOm15cGFzcw==`
-
 
 # Create a shortlink with auth
 # -u myuser:mypass -> bXl1c2VyOm15cGFzcw==
@@ -127,7 +125,6 @@ curl -X DELETE \
 - new table - user table - username, password 
 - api to create/delete users
 
-
 ```
 
 ##  To do / other considerations
@@ -141,11 +138,11 @@ curl -X DELETE \
        this is much more involved.). 
     - Figure out how to build the fat .jar properly.
     - *OR, figure out a way to run development mode in Docker.*
-- [ ] Implement unit tests
+- [x] Implement unit tests
 - [ ] Cron job (or some other processing service?) to deprecate expired shortlinks
 - [ ] Use a randomized ID for shortlinks
   - The shortlinks are currently enumerated. Ideally I'd use a UUID or a randomly generated bigint depending on how 
     much usage we think we'd get. Since the database is already created, we'd need to migrate the data to a new table.
 - [ ] Extend analytics API 
   - Add more views and filtering and sorting options.
-  - This will depend heavily on product needs as well (i.e., are they using Google analytics UTM params? Or will they be querying our service db?)
+  - This will depend heavily on product needs as well (i.e., are they using Google Analytics UTM params? Or will they be querying our service db?)
