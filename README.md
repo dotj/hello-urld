@@ -1,9 +1,8 @@
 # hello-urld
 
 Requirements:
-- Java 8 
-- SBT 1.5.5
-- ~~Docker~~ (coming soon hopefully)
+- Java 8
+- Docker or SBT 1.5.5
 
 Built off the `play-scala-slick-example` sample.
 
@@ -13,13 +12,12 @@ Built off the `play-scala-slick-example` sample.
 # To run directly with sbt
 sbt run
 
-# To run tests (if they were fully implemented :'))
+# To run tests
 sbt test
 
-# TODO - Fix docker deployment, this currently won't work
-#sbt assembly
-#docker build -t scala-app .
-#docker run -dp 9000:9000 scala-app
+# Run with Docker
+docker build -t hello-urld .
+docker run -dp 9000:9000 hello-urld
 ```
 
 Server will be running on `http://localhost:9000/`.
@@ -90,15 +88,33 @@ curl -X POST \
 # Manually deprecate links with an expiration date before today
 curl -X PUT 'http:/localhost:9000/deprecate-shortlinks'
 
-# Redirected shortlink at: http://localhost:9999/s/{token}
-# e.g., http://localhost:9999/s/ggg will redirect to https://lmgtfy.app/
+# Redirected shortlink at: http://localhost:9000/s/{token}
+# e.g., http://localhost:9000/s/ggg will redirect to https://lmgtfy.app/
 
-# Analytics can be found at http://localhost:9999/analytics/{token}
+# Analytics can be found at http://localhost:9000/analytics/{token}
+
+# Adding basic auth
+`curl -vv --basic -u myuser:mypass http://....`
+`Authorization: Basic bXl1c2VyOm15cGFzcw==`
+
+# Create a shortlink with auth
+# -u myuser:mypass -> bXl1c2VyOm15cGFzcw==
+
+# wrong auth, should not delete
+curl -X DELETE \
+  -H 'Authorization: Basic AAAA' \
+  'http:/localhost:9000/shortlink/ggg'
+
+# should work
+curl -X DELETE \
+  -H 'Authorization: Basic bXl1c2VyOm15cGFzcw==' \
+  'http:/localhost:9000/shortlink/ggg'
+
 ```
 
 ##  To do / other considerations
 
-- [ ] Dockerize
+- [x] Dockerize
   - The [`play-scala-slick-example`](https://github.com/playframework/play-samples/tree/2.8.x/play-scala-slick-example)
     repo I used as a base has both a development mode and a production mode. Using `sbt run` runs the app in 
     development mode, which automatically boots a dev database, so you can run the app locally.
@@ -106,12 +122,16 @@ curl -X PUT 'http:/localhost:9000/deprecate-shortlinks'
     - Set up production mode (see [docs](https://www.playframework.com/documentation/2.8.x/ProductionConfiguration),
        this is much more involved.). 
     - Figure out how to build the fat .jar properly.
-    - OR, figure out a way to run development mode in Docker.
-- [ ] Implement unit tests
+    - *OR, figure out a way to run development mode in Docker.*
+- [x] Implement unit tests
 - [ ] Cron job (or some other processing service?) to deprecate expired shortlinks
 - [ ] Use a randomized ID for shortlinks
   - The shortlinks are currently enumerated. Ideally I'd use a UUID or a randomly generated bigint depending on how 
     much usage we think we'd get. Since the database is already created, we'd need to migrate the data to a new table.
 - [ ] Extend analytics API 
   - Add more views and filtering and sorting options.
-  - This will depend heavily on product needs as well (i.e., are they using Google analytics UTM params? Or will they be querying our service db?)
+  - This will depend heavily on product needs as well (i.e., are they using Google Analytics UTM params? Or will they be querying our service db?)
+- [ ] Register users for auth
+  - new table - user table - username, password
+  - api to create/delete users
+  - Use registered users in auth

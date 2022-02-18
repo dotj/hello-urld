@@ -4,7 +4,6 @@ lazy val root = (project in file("."))
     name := "hello-urld",
     version := "0.1.0",
     scalaVersion := "2.13.6",
-    mainClass := Some("controllers.ShortLinkController"),
     assemblyMergeStrategy in assembly := {
       case PathList("META-INF", _*) => MergeStrategy.discard
       case _                        => MergeStrategy.first
@@ -13,9 +12,11 @@ lazy val root = (project in file("."))
       guice,
       "com.typesafe.play" %% "play-slick" % "5.0.0",
       "com.typesafe.play" %% "play-slick-evolutions" % "5.0.0",
-      "com.h2database" % "h2" % "2.0.206",
-      specs2 % Test,
-      "org.scalatest" %% "scalatest" % "3.2.9" % Test
+      "com.h2database" % "h2" % "2.1.210",
+      specs2 % Test, // includes mockito
+      "org.scalatest" %% "scalatest" % "3.2.9" % Test,
+      "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % Test,
+      "org.scalacheck" %% "scalacheck" % "1.15.4" % Test
     ),
     scalacOptions ++= Seq(
       "-feature",
